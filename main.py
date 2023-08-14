@@ -2,7 +2,17 @@
 # Description: Main script to run the application
 # Author: Felix Yuzhou Sun
 # Verson 0.0.1
-from visualization.candle_graph import interactive_candlestick
 
-interactive_candlestick("AAPL", "daily", period="1y")
+from visualization.candle_graph import app
+import webbrowser
+import threading
 
+# Function to open the web page
+def open_browser():
+    webbrowser.open_new("http://127.0.0.1:8050/")
+
+# Delayed browser opening
+threading.Timer(1, open_browser).start()
+
+if __name__ == '__main__':
+    app.run_server(debug=True)

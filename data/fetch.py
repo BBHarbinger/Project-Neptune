@@ -31,6 +31,10 @@ def fetch_stock_data(stock_symbol, time_series, period="max"):
             data = stock.history(period=period, interval="1h")
         elif time_series == "monthly":
             data = stock.history(period=period, interval="1mo")
+        elif time_series == "20min":  # our custom interval
+            data = stock.history(period=period, interval="5m")  # fetch 5-minute data
+            data = data.resample('20T').mean()  # resample to 20 minutes, taking the mean value
+
         else:
             raise InvalidTimeSeriesError(f"'{time_series}' is not a valid time series selection.")
 
