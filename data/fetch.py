@@ -5,14 +5,12 @@
 # API KEY for alpha vantage: M8WLSWBJFH1HZ19L
 # Author: Felix Yuzhou Sun
 # Version: 0.0.1
+# The function to fetch data of a specific stock from the API
 
-import requests
+import yfinance as yf
 
 # This is the APO key we use to fetch data from the API
 API_KEY = "M8WLSWBJFH1HZ19L"
-
-# The function to fetch data of a specific stock from the API
-import yfinance as yf
 
 
 # This is the exception class that will be raised when the time series is invalid

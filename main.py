@@ -2,9 +2,7 @@
 # Description: Main script to run the application
 # Author: Felix Yuzhou Sun
 # Verson 0.0.1
+from visualization.candle_graph import interactive_candlestick
 
-import yfinance as yf
-import plotly.graph_objs as go
-import tkinter as tk
-from tkinter import ttk
+interactive_candlestick("AAPL", "daily", period="1y")
 
