@@ -25,7 +25,7 @@ Output: data: the data fetched from the API
 """
 
 
-def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_key=None, peroid=None):
+def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_key=None):
     base_url = "https://www.alphavantage.co/query?"
 
     # Define the endpoints based on the time series
@@ -36,6 +36,8 @@ def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_ke
         "weekly": f"{base_url}function=TIME_SERIES_WEEKLY&symbol={stock_symbol}&apikey={alpha_vantage_api_key}"
     }
 
+    # If the time series is daily (more than 100days), we use the yfinance package to fetch data
+    # since the alpha vantage API only allows 100 days of data
     if time_series in ["dailymax", "daily1y", "daily5y", "daily10y", "daily20y"]:
         try:
             if time_series == "dailymax":
@@ -48,6 +50,8 @@ def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_ke
                 period = "10y"
             elif time_series == "daily20y":
                 period = "20y"
+            else:
+                period = "1y"   # Default period is 1 year
 
             data = yf.download(stock_symbol, period=period, progress=False)
             data = data[['Open', 'High', 'Low', 'Close', 'Volume']]
@@ -58,9 +62,9 @@ def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_ke
             raise ValueError(f"An error occurred while fetching data from Yahoo: {e}")
 
     try:
+        # For other time series, we use the alpha vantage API
         response = requests.get(endpoints[time_series])
         response_data = response.json()
-
         # Extract the appropriate data depending on the chosen time series
         data_keys = {
             "daily100d": "Time Series (Daily)",
@@ -87,7 +91,7 @@ def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_ke
 # Example usage
 alpha_vantage_key = API_KEY
 try:
-    stock_data = fetch_stock_data("AAPL", time_series="daily100d", alpha_vantage_api_key=alpha_vantage_key)
+    stock_data = fetch_stock_data("MSFT", time_series="weekly", alpha_vantage_api_key=alpha_vantage_key)
     print(stock_data)
 except ValueError as e:
     print(e)
