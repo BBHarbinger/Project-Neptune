@@ -16,12 +16,18 @@ import pandas as pd
 API_KEY = "M8WLSWBJFH1HZ19L"
 
 """
-This function is used to fetch data from the API
-We get daily data from yahoo finance and intraday, weekly, and monthly data from alpha vantage
-Input:  stock_symbol: the stock symbol of the stock
-        time_series: the target time series of the data
-        period: the period of the history data
-Output: data: the data fetched from the API
+Name:           fetch_stock_data
+Description:    This function is used to fetch data from the API
+                We get daily data from yahoo finance and intraday, weekly, 
+                and monthly data from alpha vantage
+Inputs:         stock_symbol: the stock symbol of the stock
+                time_series: the target time series of the data
+                period: the period of the history data
+Output:         data: the data fetched from the API
+
+ATTENTION:      Avoid using inter-day, weekly, and monthly time series for testing
+                The alpha vantage API only allows 5 calls per minute and 500 calls per day
+
 """
 
 
@@ -87,7 +93,7 @@ def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_ke
     except Exception as e:
         raise ValueError(f"An error occurred: {e}")
 
-
+""""
 # Example usage
 alpha_vantage_key = API_KEY
 try:
@@ -95,3 +101,4 @@ try:
     print(stock_data)
 except ValueError as e:
     print(e)
+"""
