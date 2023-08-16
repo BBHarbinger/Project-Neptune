@@ -3,7 +3,9 @@
 # Author: Felix Yuzhou Sun
 # Verson 0.0.1
 
-from visualization.candle_graph import app
+# 1.Dash version
+"""
+from visualization.visual_model_dash import app
 import webbrowser
 import threading
 
@@ -16,3 +18,8 @@ threading.Timer(1, open_browser).start()
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
+"""
+
+#2. lightweight_charts version
+
