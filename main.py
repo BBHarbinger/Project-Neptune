@@ -4,8 +4,8 @@
 # Verson 0.0.1
 
 # 1.Dash version
-"""
-from visualization.visual_model_dash import app
+
+from components.visualization.visual_model_plotly import app
 import webbrowser
 import threading
 
@@ -19,7 +19,7 @@ threading.Timer(1, open_browser).start()
 if __name__ == '__main__':
     app.run_server(debug=True)
 
-"""
+
 
 #2. lightweight_charts version
 
