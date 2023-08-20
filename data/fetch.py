@@ -64,13 +64,19 @@ def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_ke
             data = data.reset_index()
             data.columns = ['time', 'open', 'high', 'low', 'close', 'volume']
             return data
+
         except Exception as e:
-            raise ValueError(f"An error occurred while fetching data from Yahoo: {e}")
+            print(f"Error downloading data: {e}")
+            return None
 
     try:
         # For other time series, we use the alpha vantage API
         response = requests.get(endpoints[time_series])
         response_data = response.json()
+        # Check if the response contains an error message
+        if "Error Message" in response_data:
+            print(f"Error: {response_data['Error Message']}")  # Log the error message for debugging
+            return None
         # Extract the appropriate data depending on the chosen time series
         data_keys = {
             "daily100d": "Time Series (Daily)",
@@ -89,9 +95,11 @@ def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_ke
         return data
 
     except KeyError:
-        raise ValueError(f"Stock symbol {stock_symbol} not found or data not available.")
+        print(f"Possible invalid stock symbol: {stock_symbol} or unexpected response format")
     except Exception as e:
-        raise ValueError(f"An error occurred: {e}")
+        print(f"An error occurred: {e}")
+
+    return None
 
 """"
 # Example usage
