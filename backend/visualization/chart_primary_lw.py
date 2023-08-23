@@ -15,14 +15,14 @@ import threading
 
 import pandas as pd
 from lightweight_charts import Chart
-from data.fetch import API_KEY
+from backend.data.fetch import API_KEY, fetch_stock_data
 
 
-def chart_init(stock_data, stock_symbol="TLSA", time_series="daily5y", alpha_vantage_api_key=None):
+def chart_init(stock_data = None, stock_symbol="TLSA", time_series="daily5y", alpha_vantage_api_key=None):
     alpha_vantage_key = API_KEY
-    if stock_data is None:
-        print("No stock data provided")
-        return None
+    #if stock_data is None:
+    #    print("No stock data provided")
+    #    return None
 
     chart = Chart(toolbox=True)
 
@@ -51,8 +51,8 @@ def chart_init(stock_data, stock_symbol="TLSA", time_series="daily5y", alpha_van
     # Search function
 
     # Fetch data
-    #stock_data = fetch_stock_data(stock_symbol, time_series=time_series,
-    #                              alpha_vantage_api_key=alpha_vantage_key)
+    stock_data = fetch_stock_data(stock_symbol, time_series=time_series,
+                                  alpha_vantage_api_key=alpha_vantage_key)
 
     sma20 = pd.DataFrame(columns=['time', 'SMA20'])
     sma20.time = stock_data.time
@@ -66,7 +66,7 @@ def chart_init(stock_data, stock_symbol="TLSA", time_series="daily5y", alpha_van
     sma50_line = chart.create_line(name='SMA50', color='#26c6da', width=1, price_label=True)
     sma50_line.set(sma50.dropna())
 
-    #chart.events.search += on_search
+    chart.events.search += on_search
     # Load data
     chart.set(stock_data)
 
@@ -79,11 +79,11 @@ def chart_init(stock_data, stock_symbol="TLSA", time_series="daily5y", alpha_van
     #chart.show(block=True)
     threading.Thread(target=chart.show, kwargs={'block': True}).start()
 
-"""
-def on_search(chart, searched_string, sma20 = None, sma50 = None):  # Called when the user searches.
+
+def on_search(chart, searched_string):  # Called when the user searches.
     stock_data = fetch_stock_data(searched_string, time_series="daily5y")
     if stock_data.empty:
         return
     chart.set(stock_data)
-"""
+
 

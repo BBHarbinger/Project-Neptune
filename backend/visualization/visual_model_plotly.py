@@ -1,5 +1,5 @@
 
-from data.fetch import fetch_stock_data
+from backend.data.fetch import fetch_stock_data
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import dash

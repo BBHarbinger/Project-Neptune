@@ -4,11 +4,10 @@
 # Verson 0.0.1
 
 import dash
-import webbrowser
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from components.visualization.chart_primary_lw import chart_init
-from data.fetch import fetch_stock_data
+from backend.data.fetch import fetch_stock_data
 
 # lightweight_charts version
 """
@@ -49,7 +48,7 @@ def update_graph(n_submit, stock_symbol):
 
 if __name__ == '__main__':
     # Open the browser first
-    webbrowser.open('http://127.0.0.1:8050/', new=2)  # new=2 opens in a new tab if possible
+    #webbrowser.open('http://127.0.0.1:8050/', new=2)  # new=2 opens in a new tab if possible
     # Then run the Dash app
-    app.run_server(debug=True, use_reloader=False)
-    # chart_init(stock_symbol="TSLA")
+    #app.run_server(debug=True, use_reloader=False)
+    chart_init(stock_symbol="TSLA")
