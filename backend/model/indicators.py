@@ -67,11 +67,18 @@ def cross(data, short_term, long_term, ma_function):
     long_term_ma = ma_function(long_term)(data)
 
     # Create a new DataFrame based on the original data
-    cross_list = data.copy()
+    cross_list = pd.DataFrame()
+
+    # Copy the 'time' column from the original data to align events in time
+    if 'time' in data.columns:
+        cross_list['time'] = data['time']
 
     # Identify where the short-term MA is above or below the long-term MA
     cross_list['GC'] = (short_term_ma > long_term_ma) & (short_term_ma.shift(1) <= long_term_ma.shift(1))
     cross_list['DC'] = (short_term_ma < long_term_ma) & (short_term_ma.shift(1) >= long_term_ma.shift(1))
+
+    # Filter out the rows where neither a GC nor a DC occurred
+    cross_list = cross_list[(cross_list['GC']) | (cross_list['DC'])]
 
     return cross_list.dropna()
 
