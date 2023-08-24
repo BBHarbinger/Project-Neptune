@@ -30,7 +30,6 @@ ATTENTION:      Avoid using inter-day, weekly, and monthly time series for testi
 
 """
 
-
 def fetch_stock_data(stock_symbol, time_series="daily100d", alpha_vantage_api_key=None):
     base_url = "https://www.alphavantage.co/query?"
 
