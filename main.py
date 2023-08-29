@@ -6,7 +6,7 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
-from components.visualization.chart_primary_lw import chart_init
+from backend.visualization.chart_primary_lw import chart_init
 from backend.data.fetch import fetch_stock_data
 
 # lightweight_charts version

@@ -83,4 +83,10 @@ def cross(data, short_term, long_term, ma_function):
     return cross_list.dropna()
 
 
+df = pd.DataFrame()
 
+# Help about this, 'ta', extension
+help(df.ta)
+
+# List of all indicators
+df.ta.indicators()
