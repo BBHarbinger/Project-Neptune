@@ -15,14 +15,12 @@ import threading
 
 import pandas as pd
 from lightweight_charts import Chart
-from backend.data.fetch import API_KEY, fetch_stock_data
+from backend.data.fetch import API_KEY
 
 
-def chart_init(stock_data = None, stock_symbol="TLSA", time_series="daily5y", alpha_vantage_api_key=None):
+def chart_init(db_manager, stock_data = None, stock_symbol="TLSA", time_series="daily5y", alpha_vantage_api_key=None):
     alpha_vantage_key = API_KEY
-    #if stock_data is None:
-    #    print("No stock data provided")
-    #    return None
+    stock_data = db_manager.fetch_stock_data(stock_symbol, time_series=time_series, alpha_vantage_api_key=alpha_vantage_key)
 
     chart = Chart(toolbox=True)
 
@@ -50,10 +48,6 @@ def chart_init(stock_data = None, stock_symbol="TLSA", time_series="daily5y", al
     chart.topbar.textbox('symbol', stock_symbol)
     # Search function
 
-    # Fetch data
-    stock_data = fetch_stock_data(stock_symbol, time_series=time_series,
-                                  alpha_vantage_api_key=alpha_vantage_key)
-
     sma20 = pd.DataFrame(columns=['time', 'SMA20'])
     sma20.time = stock_data.time
     sma20.SMA20 = stock_data.close.rolling(window=20).mean()
@@ -80,8 +74,8 @@ def chart_init(stock_data = None, stock_symbol="TLSA", time_series="daily5y", al
     threading.Thread(target=chart.show, kwargs={'block': True}).start()
 
 
-def on_search(chart, searched_string):  # Called when the user searches.
-    stock_data = fetch_stock_data(searched_string, time_series="daily5y")
+def on_search(db_manager, chart, searched_string):  # Called when the user searches.
+    stock_data = db_manager.fetch_stock_data(searched_string, time_series="daily5y")
     if stock_data.empty:
         return
     chart.set(stock_data)

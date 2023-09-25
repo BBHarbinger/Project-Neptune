@@ -7,7 +7,7 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from backend.visualization.chart_primary_lw import chart_init
-from backend.data.fetch import fetch_stock_data
+from backend.data.fetch import StockDatabaseManager
 
 # lightweight_charts version
 """
@@ -27,6 +27,8 @@ app.layout = html.Div([
     html.P(id='feedback', style={'color': 'red'})  # This will display error messages or other feedback
 ])
 
+# Instantiate the class
+db_manager = StockDatabaseManager()
 
 @app.callback(
     Output('feedback', 'children'),  # This will update the content of the feedback paragraph
@@ -34,14 +36,16 @@ app.layout = html.Div([
     [dash.dependencies.State('stock-input', 'value')]
 )
 def update_graph(n_submit, stock_symbol):
-    if n_submit and n_submit > 0:  # Only update when Enter key is pressed
-        data = fetch_stock_data(stock_symbol=stock_symbol, time_series="daily5y")
-        if data is None:
-            return "Invalid stock symbol or data unavailable. Please try again."  # Return error message to display
+    if n_submit and n_submit > 0:
+        # Use the method from the instantiated class to fetch the data
+        data = db_manager.fetch_stock_data(stock_symbol=stock_symbol, time_series="daily5y")
+        if data is None or data.empty:  # Check if data is empty DataFrame as well
+            return "Invalid stock symbol or data unavailable. Please try again."
         else:
-            # Continue processing the valid data as required
             if __name__ == '__main__':
                 chart_init(stock_data=data, stock_symbol=stock_symbol)
+
+    return ""
 
     return ""  # Return empty string if no error
 
@@ -51,4 +55,4 @@ if __name__ == '__main__':
     #webbrowser.open('http://127.0.0.1:8050/', new=2)  # new=2 opens in a new tab if possible
     # Then run the Dash app
     #app.run_server(debug=True, use_reloader=False)
-    chart_init(stock_symbol="TSLA")
+    chart_init(db_manager, stock_symbol="TSLA")
