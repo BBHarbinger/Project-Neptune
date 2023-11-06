@@ -36,6 +36,7 @@ ATTENTION:      Avoid using inter-day, weekly, and monthly time series for testi
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class StockDatabaseManager:
     def __init__(self, db_name: str = "stock_data.db", api_key: str = "M8WLSWBJFH1HZ19L"):
         """
@@ -55,146 +56,113 @@ class StockDatabaseManager:
         conn = sqlite3.connect(self.db_name)
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS stock_data 
-                     (symbol TEXT, time TEXT, open REAL, high REAL, low REAL, close REAL, volume INTEGER, PRIMARY KEY(symbol, time))''')
+                     (symbol TEXT, time TEXT, open REAL, high REAL, low REAL, close REAL, volume INTEGER, data_type TEXT, 
+                     PRIMARY KEY(symbol, time, data_type))''')
         conn.commit()
         conn.close()
 
-    def store_data(self, symbol: str, data: pd.DataFrame) -> None:
+    def store_data(self, symbol: str, data: pd.DataFrame, data_type: str) -> None:
         """
-        Store the fetched stock data in the SQLite database.
+        Store the fetched stock data in the SQLite database with an additional column for data type.
 
         :param symbol: Stock symbol.
         :param data: Fetched stock data.
+        :param data_type: Type of data ("daily" or "intraday").
         """
         conn = sqlite3.connect(self.db_name)
         c = conn.cursor()
         for index, row in data.iterrows():
             formatted_time = row['time'].strftime('%Y-%m-%d %H:%M:%S')
-            c.execute('''INSERT OR IGNORE INTO stock_data (symbol, time, open, high, low, close, volume) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                      (symbol, formatted_time, row['open'], row['high'], row['low'], row['close'], row['volume']))
+            c.execute('''INSERT OR IGNORE INTO stock_data (symbol, time, open, high, low, close, volume, data_type) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                      (symbol, formatted_time, row['open'], row['high'], row['low'], row['close'], row['volume'], data_type))
         conn.commit()
         conn.close()
 
-    def fetch_local_data(self, symbol: str, time_series: str) -> pd.DataFrame:
+    def fetch_daily_data(self, stock_symbol: str, period: str = "1y") -> pd.DataFrame or None:
         """
-        Fetch the stock data from the local SQLite database.
+        Fetch daily stock data using yfinance.
 
-        :param symbol: Stock symbol.
-        :param time_series: Time series of the data.
-        :return: Stock data.
+        :param stock_symbol: Stock symbol.
+        :param period: Period of the history data (e.g., "1y", "5y", "max").
+        :return: Daily stock data as a DataFrame.
         """
-        conn = sqlite3.connect(self.db_name)
-        data = pd.read_sql_query(f"SELECT * FROM stock_data WHERE symbol = '{symbol}'", conn)
-        conn.close()
-        data['time'] = pd.to_datetime(data['time'])
-        return data
+        try:
+            data = yf.download(stock_symbol, period=period, progress=False)
+            data = data[['Open', 'High', 'Low', 'Close', 'Volume']]
+            data = data.reset_index()
+            data.columns = ['time', 'open', 'high', 'low', 'close', 'volume']
+            data['time'] = pd.to_datetime(data['time'])
 
-    def is_data_up_to_date(self, symbol: str, latest_time: datetime) -> bool:
+            # Store the data in the database with 'daily' as data_type
+            self.store_data(stock_symbol, data, "daily")
+
+            return data
+
+        except Exception as e:
+            logger.error(f"Error downloading daily data: {e}")
+            return None
+
+    def fetch_intraday_data(self, stock_symbol: str, interval: str = "5min") -> pd.DataFrame:
         """
-        Check if the local database has the latest stock data.
+        Fetch intraday stock data using Alpha Vantage.
 
-        :param symbol: Stock symbol.
-        :param latest_time: The latest time to check against.
-        :return: Boolean indicating if the local data is up to date.
+        :param stock_symbol: Stock symbol.
+        :param interval: Time interval for intraday data (e.g., "5min", "15min").
+        :return: Intraday stock data as a DataFrame.
         """
-        conn = sqlite3.connect(self.db_name)
-        c = conn.cursor()
-        c.execute(f"SELECT MAX(time) FROM stock_data WHERE symbol = '{symbol}'")
-        max_time = c.fetchone()[0]
-        conn.close()
-        if max_time is not None:
-            max_time = datetime.strptime(max_time, '%Y-%m-%d %H:%M:%S')
-            return max_time >= latest_time
-        return False
-
-    def fetch_stock_data(self, stock_symbol: str, time_series: str = "daily100d", alpha_vantage_api_key: str = None) -> pd.DataFrame:
-
-        # If local data is up to date, fetch from local database
-        latest_time = datetime.now()  # Modify it as per your requirement
-        if self.is_data_up_to_date(stock_symbol, latest_time):
-            return self.fetch_local_data(stock_symbol, time_series)
-
-        # If API key is not provided, use the instance's API key
-        if alpha_vantage_api_key is None:
-            alpha_vantage_api_key = self.api_key
-
         base_url = "https://www.alphavantage.co/query?"
-
-        # Define the endpoints based on the time series
-        endpoints = {
-            "daily100d": f"{base_url}function=TIME_SERIES_DAILY&symbol={stock_symbol}&apikey={alpha_vantage_api_key}",
-            "interday": f"{base_url}function=TIME_SERIES_INTRADAY&symbol={stock_symbol}&interval=5min&apikey={alpha_vantage_api_key}",
-            "monthly": f"{base_url}function=TIME_SERIES_MONTHLY&symbol={stock_symbol}&apikey={alpha_vantage_api_key}",
-            "weekly": f"{base_url}function=TIME_SERIES_WEEKLY&symbol={stock_symbol}&apikey={alpha_vantage_api_key}"
-        }
-
-        # If the time series is daily (more than 100days), we use the yfinance package to fetch data
-        # since the alpha vantage API only allows 100 days of data
-        if time_series in ["dailymax", "daily1y", "daily5y", "daily10y", "daily20y"]:
-            try:
-                if time_series == "dailymax":
-                    period = "max"
-                elif time_series == "daily1y":
-                    period = "1y"
-                elif time_series == "daily5y":
-                    period = "5y"
-                elif time_series == "daily10y":
-                    period = "10y"
-                elif time_series == "daily20y":
-                    period = "20y"
-                else:
-                    period = "1y"  # Default period is 1 year
-
-                data = yf.download(stock_symbol, period=period, progress=False)
-                data = data[['Open', 'High', 'Low', 'Close', 'Volume']]
-                data = data.reset_index()
-                data.columns = ['time', 'open', 'high', 'low', 'close', 'volume']
-                return data
-
-            except Exception as e:
-                print(f"Error downloading data: {e}")
-                return None
+        endpoint = f"{base_url}function=TIME_SERIES_INTRADAY&symbol={stock_symbol}&interval={interval}&apikey={self.api_key}"
 
         try:
-            # For other time series, we use the alpha vantage API
-            response = requests.get(endpoints[time_series])
-            # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
+            response = requests.get(endpoint)
             response.raise_for_status()
             response_data = response.json()
-            # Check if the response contains an error message
-            if "Error Message" in response_data:
-                print(f"Error: {response_data['Error Message']}")  # Log the error message for debugging
-                return None
-            # Extract the appropriate data depending on the chosen time series
-            data_keys = {
-                "daily100d": "Time Series (Daily)",
-                "interday": "Time Series (5min)",
-                "monthly": "Monthly Time Series",
-                "weekly": "Weekly Time Series"
-            }
 
-            data = pd.DataFrame(response_data[data_keys[time_series]]).T
+            if "Error Message" in response_data:
+                logger.error(f"Error: {response_data['Error Message']}")
+                return None
+
+            data = pd.DataFrame(response_data['Time Series (' + interval + ')']).T
             data = data[['1. open', '2. high', '3. low', '4. close', '5. volume']]
             data.columns = ['open', 'high', 'low', 'close', 'volume']
             data = data.reset_index()
             data.columns = ['time', 'open', 'high', 'low', 'close', 'volume']
             data['time'] = pd.to_datetime(data['time'])
 
+            # Store the data in the database with 'intraday' as data_type
+            self.store_data(stock_symbol, data, "intraday")
 
-            # Check data integrity before storing
-            if data is not None and not data.empty:
-                self.store_data(stock_symbol, data)
             return data
 
         except requests.exceptions.HTTPError as errh:
-            logger.error(f"Http Error: {errh}")
+            logger.error(f"HTTP Error: {errh}")
         except KeyError:
             logger.error(f"Possible invalid stock symbol: {stock_symbol} or unexpected response format")
         except Exception as err:
             logger.error(f"Error occurred: {err}")
 
         return None
+
+    def is_data_up_to_date(self, symbol: str, data_type: str, latest_time: datetime) -> bool:
+        """
+        Check if the local database has the latest stock data for the specified data type.
+
+        :param symbol: Stock symbol.
+        :param data_type: Type of data ("daily" or "intraday").
+        :param latest_time: The latest time to check against.
+        :return: Boolean indicating if the local data is up to date.
+        """
+        conn = sqlite3.connect(self.db_name)
+        c = conn.cursor()
+        # Include the data_type in the WHERE clause to check the latest time for the specific type of data
+        c.execute(f"SELECT MAX(time) FROM stock_data WHERE symbol = ? AND data_type = ?", (symbol, data_type))
+        max_time = c.fetchone()[0]
+        conn.close()
+        if max_time is not None:
+            max_time = datetime.strptime(max_time, '%Y-%m-%d %H:%M:%S')
+            return max_time >= latest_time
+        return False
 
 
 """"

@@ -12,15 +12,14 @@ p.s:
 
 """
 import threading
-
 import pandas as pd
 from lightweight_charts import Chart
 from backend.data.fetch import API_KEY
 
 
-def chart_init(db_manager, stock_data = None, stock_symbol="TLSA", time_series="daily5y", alpha_vantage_api_key=None):
+def chart_init(db_manager, stock_data = None, stock_symbol="TLSA", time_series="5y", alpha_vantage_api_key=None):
     alpha_vantage_key = API_KEY
-    stock_data = db_manager.fetch_stock_data(stock_symbol, time_series=time_series, alpha_vantage_api_key=alpha_vantage_key)
+    stock_data = db_manager.fetch_daily_data(stock_symbol, period=time_series)
 
     chart = Chart(toolbox=True)
 
