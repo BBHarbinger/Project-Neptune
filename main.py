@@ -3,10 +3,7 @@
 # Author: Felix Yuzhou Sun
 # Verson 0.0.1
 
-import dash
-from dash import dcc, html
-from dash.dependencies import Input, Output
-from backend.visualization.chart_primary_lw import chart_init
+from frontend.visualization.chart_primary_lw import chart_init
 from backend.data.fetch import StockDatabaseManager
 
 # lightweight_charts version
