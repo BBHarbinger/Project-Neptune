@@ -42,6 +42,7 @@ app.layout = html.Div([
     )
 ])
 
+
 @app.callback(
     Output('stock-graph', 'figure'),
     [Input('stock-input', 'value'),
@@ -64,13 +65,14 @@ def update_graph(stock_symbol, time_range, sma_periods):
         print(f"Error: {e}")
         return go.Figure()
 
+
 def create_stock_graph(data, title, sma_periods):
     # Format the 'time' column to display only year, month, and day
     data['formatted_time'] = data['time'].dt.strftime('%Y-%m-%d')
 
     # Create a subplot with 2 rows and adjust the gap between the rows
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
-                        vertical_spacing=0.15,
+                        vertical_spacing=0.18,
                         row_heights=[0.6, 0.3])
 
     # Add the candlestick trace
@@ -121,6 +123,7 @@ def create_stock_graph(data, title, sma_periods):
     )
 
     return fig
+
 
 if __name__ == '__main__':
     # Define the local server URL
