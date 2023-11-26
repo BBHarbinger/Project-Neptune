@@ -3,8 +3,8 @@
 # Author: Felix Yuzhou Sun
 # Verson 0.0.1
 
-from frontend.visualization.chart_primary_lw import chart_init
-from backend.data.fetch import StockDatabaseManager
+from visualization.chart_primary_lw import chart_init
+from data.fetch import StockDatabaseManager
 
 # lightweight_charts version
 """

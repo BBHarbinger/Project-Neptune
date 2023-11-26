@@ -1,7 +1,7 @@
 from main import app
 import dash
 from dash.dependencies import Input, Output
-from backend.data.fetch import fetch_stock_data
+from data.fetch import fetch_stock_data
 
 
 @app.callback(

@@ -14,7 +14,7 @@ p.s:
 import threading
 import pandas as pd
 from lightweight_charts import Chart
-from backend.data.fetch import API_KEY
+from data.fetch import API_KEY
 
 
 def chart_init(db_manager, stock_data = None, stock_symbol="TLSA", time_series="5y", alpha_vantage_api_key=None):
