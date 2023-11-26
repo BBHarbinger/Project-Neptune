@@ -103,7 +103,7 @@ def create_stock_graph(data, title, sma_periods):
         sma_line = go.Scatter(x=data['formatted_time'], y=sma_data[col], mode='lines', name=f'{col}', line=dict())
         fig.add_trace(sma_line, row=1, col=1)
 
-    # Update layout
+    # Update layout with crosshair mode for hover
     fig.update_layout(
         title={
             'text': title,
@@ -116,7 +116,8 @@ def create_stock_graph(data, title, sma_periods):
         height=1000,
         xaxis2_rangeslider_visible=False,
         xaxis_type='category',
-        xaxis2_type='category'
+        xaxis2_type='category',
+        hovermode='x unified'  # Add crosshair mode
     )
 
     return fig
